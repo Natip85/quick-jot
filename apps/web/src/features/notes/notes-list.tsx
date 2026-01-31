@@ -4,12 +4,14 @@ import { useEffect } from "react";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { Pin } from "lucide-react";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc";
 import { useNotesSearchParams } from "./query-params";
 
 export function NotesList() {
   const trpc = useTRPC();
+  const isMobile = useIsMobile();
 
   const { folderId, noteId, setNoteId, q } = useNotesSearchParams();
   const { data: notes, isFetching } = useQuery(
@@ -17,7 +19,10 @@ export function NotesList() {
   );
 
   // Auto-select the first note when folder has notes and no note is selected
+  // Only on desktop - on mobile, user navigates manually through stack navigation
   useEffect(() => {
+    // Don't auto-select on mobile - it breaks back navigation
+    if (isMobile) return;
     // Don't auto-select while fetching to avoid race conditions with new note creation
     if (isFetching) return;
     // Don't auto-select while searching - user will click the result they want
@@ -29,7 +34,7 @@ export function NotesList() {
     if (!isNoteInFolder) {
       setNoteId(notes[0].id);
     }
-  }, [folderId, notes, noteId, setNoteId, isFetching, q]);
+  }, [folderId, notes, noteId, setNoteId, isFetching, q, isMobile]);
 
   return (
     <div className="flex h-full flex-col">
