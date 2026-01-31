@@ -1,0 +1,22 @@
+import { folderRouter } from "./routers/folder";
+import { noteRouter } from "./routers/note";
+import { userRouter } from "./routers/user";
+import { createCallerFactory, createTRPCRouter } from "./trpc";
+
+export const appRouter = createTRPCRouter({
+  user: userRouter,
+  folder: folderRouter,
+  note: noteRouter,
+});
+
+// export type definition of API
+export type AppRouter = typeof appRouter;
+
+/**
+ * Create a server-side caller for the tRPC API.
+ * @example
+ * const trpc = createCaller(createContext);
+ * const res = await trpc.product.all();
+ *       ^? Product[]
+ */
+export const createCaller = createCallerFactory(appRouter);
