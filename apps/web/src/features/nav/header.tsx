@@ -7,7 +7,7 @@ import { Menu, Pen, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { authClient } from "@/lib/auth-client";
-import { NavUser } from "./nav-user";
+import { NavUserAvatar } from "./nav-user-avatar";
 
 const navigation = [{ name: "Notes", href: "/notes" }];
 
@@ -105,7 +105,7 @@ export function Header() {
 
         {/* Right actions */}
         <div className="flex items-center gap-1">
-          <NavUser />
+          <NavUserAvatar />
         </div>
       </div>
     </header>
