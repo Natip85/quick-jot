@@ -2,7 +2,7 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { Menu, Shield } from "lucide-react";
+import { Menu, Pen, Shield } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -37,10 +37,13 @@ export function Header() {
             >
               <Link
                 href="/"
-                className="mt-2 flex items-center"
+                className="flex items-center gap-2"
               >
+                <div className="bg-foreground flex h-8 w-8 items-center justify-center rounded-lg">
+                  <Pen className="text-background h-4 w-4" />
+                </div>
                 <span className="text-foreground text-xl font-semibold tracking-tight">
-                  Quick-jot
+                  Quick-Jot
                 </span>
               </Link>
               <nav className="mt-6 flex flex-col gap-6">
@@ -70,8 +73,11 @@ export function Header() {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center"
+          className="flex items-center gap-2"
         >
+          <div className="bg-foreground flex h-8 w-8 items-center justify-center rounded-lg">
+            <Pen className="text-background h-4 w-4" />
+          </div>
           <span className="text-foreground text-xl font-semibold tracking-tight">Quick-Jot</span>
         </Link>
 

@@ -22,6 +22,7 @@ type RichTextEditorProps = {
   content?: JSONContent[];
   children?: React.ReactNode;
   toolbarLeadingContent?: React.ReactNode;
+  isPinned?: boolean;
 };
 
 type NoteUpdate = {
@@ -34,6 +35,7 @@ export const RichTextEditor = ({
   content,
   children,
   toolbarLeadingContent,
+  isPinned,
 }: RichTextEditorProps) => {
   const router = useRouter();
   const trpc = useTRPC();
@@ -158,6 +160,9 @@ export const RichTextEditor = ({
           editor={editor}
           editorState={editorState ?? {}}
           leadingContent={toolbarLeadingContent}
+          noteId={noteId}
+          currentFolderId={folderId}
+          isPinned={isPinned}
           onDelete={() => {
             if (noteId) {
               deleteNote({ id: noteId });

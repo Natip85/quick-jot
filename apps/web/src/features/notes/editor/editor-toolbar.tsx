@@ -1,18 +1,23 @@
 import type { Editor } from "@tiptap/react";
 import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bold,
   Check,
+  FolderIcon,
   Highlighter,
   ImageIcon,
   Italic,
   Link,
   Loader2,
   MoreVertical,
+  Pin,
+  PinOff,
   Quote,
   Redo,
   Strikethrough,
   Trash2,
+  TypeIcon,
   Underline,
   Undo,
 } from "lucide-react";
@@ -29,11 +34,22 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Toggle } from "@/components/ui/toggle";
 import { UploadButton } from "@/lib/uploadthing";
 import { cn } from "@/lib/utils";
+import { useTRPC } from "@/trpc";
+import { useNotesSearchParams } from "../query-params";
 import { SearchInput } from "./search-input";
 
 export type EditorState = {
@@ -68,6 +84,9 @@ type EditorToolbarProps = {
   editor: Editor | null;
   editorState: EditorState;
   leadingContent?: React.ReactNode;
+  noteId?: string | null;
+  currentFolderId?: string | null;
+  isPinned?: boolean;
   onDelete?: () => void;
 };
 
@@ -94,6 +113,9 @@ export function EditorToolbar({
   editor,
   editorState,
   leadingContent,
+  noteId,
+  currentFolderId,
+  isPinned,
   onDelete,
 }: EditorToolbarProps) {
   const [linkUrl, setLinkUrl] = useState("");
@@ -101,6 +123,43 @@ export function EditorToolbar({
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const { setSearchParams } = useNotesSearchParams();
+
+  const { data: folders } = useQuery(trpc.folder.list.queryOptions());
+
+  const { mutate: moveNote } = useMutation(
+    trpc.note.move.mutationOptions({
+      onSuccess: (data, variables) => {
+        if (currentFolderId) {
+          void queryClient.invalidateQueries({
+            queryKey: trpc.note.list.queryKey({ folderId: currentFolderId }),
+          });
+        }
+        void queryClient.invalidateQueries({
+          queryKey: trpc.note.list.queryKey({ folderId: variables.folderId }),
+        });
+        void setSearchParams({ folderId: variables.folderId, noteId: variables.id });
+      },
+    })
+  );
+
+  const { mutate: togglePin } = useMutation(
+    trpc.note.togglePin.mutationOptions({
+      onSuccess: (data) => {
+        if (currentFolderId) {
+          void queryClient.invalidateQueries({
+            queryKey: trpc.note.list.queryKey({ folderId: currentFolderId }),
+          });
+        }
+        if (data) {
+          queryClient.setQueryData(trpc.note.get.queryKey({ id: data.id }), data);
+        }
+      },
+    })
+  );
 
   const handleSetColor = (color: string | undefined) => {
     if (color) {
@@ -217,7 +276,7 @@ export function EditorToolbar({
             size="sm"
             className="text-muted-foreground hover:text-foreground hover:bg-accent size-8 p-0"
           >
-            <MoreVertical className="h-4 w-4" />
+            <TypeIcon className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -437,39 +496,95 @@ export function EditorToolbar({
       {/* Search */}
       <SearchInput className="w-52" />
 
+      {/* More Options */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent size-8 p-0"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          sideOffset={8}
+        >
+          <DropdownMenuItem
+            onClick={() => {
+              if (noteId) {
+                togglePin({ id: noteId });
+              }
+            }}
+          >
+            {isPinned ?
+              <>
+                <PinOff className="mr-2 h-4 w-4" />
+                Unpin note
+              </>
+            : <>
+                <Pin className="mr-2 h-4 w-4" />
+                Pin note
+              </>
+            }
+          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Move to</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              {folders?.map((folder) => (
+                <DropdownMenuItem
+                  key={folder.id}
+                  disabled={folder.id === currentFolderId}
+                  onClick={() => {
+                    if (noteId) {
+                      moveNote({ id: noteId, folderId: folder.id });
+                    }
+                  }}
+                >
+                  <FolderIcon className="mr-2 h-4 w-4" />
+                  {folder.name}
+                  {folder.id === currentFolderId && <Check className="ml-auto h-4 w-4" />}
+                </DropdownMenuItem>
+              ))}
+              {(!folders || folders.length === 0) && (
+                <DropdownMenuItem disabled>No folders available</DropdownMenuItem>
+              )}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       {/* Delete Note */}
       {onDelete && (
-        <>
-          <div className="bg-border mx-2 h-6 w-px" />
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 size-8 p-0"
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 size-8 p-0"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete note</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this note? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={onDelete}
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete note</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this note? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  variant="destructive"
-                  onClick={onDelete}
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );

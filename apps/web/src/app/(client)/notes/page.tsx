@@ -21,7 +21,7 @@ export default async function NotesPage({ searchParams }: PageProps) {
   prefetch(trpc.folder.list.queryOptions());
 
   return (
-    <div className="bg-secondary/50 size-full rounded-2xl">
+    <div className="bg-secondary/50 size-full">
       <ResizablePanelGroup
         direction="horizontal"
         autoSaveId="main-layout"
@@ -31,7 +31,7 @@ export default async function NotesPage({ searchParams }: PageProps) {
           minSize={10}
           maxSize={20}
           collapsible
-          className="bg-secondary rounded-2xl"
+          className="bg-secondary"
         >
           <FoldersSidebar />
         </ResizablePanel>
@@ -44,10 +44,7 @@ export default async function NotesPage({ searchParams }: PageProps) {
           <NotesList />
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel
-          defaultSize={50}
-          className="rounded-r-2xl"
-        >
+        <ResizablePanel defaultSize={50}>
           <NoteEditorPanel />
         </ResizablePanel>
       </ResizablePanelGroup>

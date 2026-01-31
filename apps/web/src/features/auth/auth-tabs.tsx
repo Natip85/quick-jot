@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, useState } from "react";
+import { useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -28,10 +28,10 @@ export function AuthTabs() {
     <Tabs
       value={selectedTab}
       onValueChange={(t) => setSelectedTab(t as Tab)}
-      className="w-full max-w-md px-4"
+      className="w-full max-w-md"
     >
       {isAuthTab && (
-        <TabsList className="w-fit">
+        <TabsList className="mb-4 grid w-full grid-cols-2">
           <TabsTrigger value="signin">Sign In</TabsTrigger>
           <TabsTrigger value="signup">Sign Up</TabsTrigger>
         </TabsList>
@@ -39,27 +39,27 @@ export function AuthTabs() {
 
       {isAuthTab && (
         <Card>
-          <CardContent className="space-y-4 py-4">
+          <CardContent className="space-y-4 pt-6">
             <SocialAuthButtons />
 
-            <div className="relative my-6">
+            <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <Separator className="w-full" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card text-muted-foreground px-2">or</span>
+                <span className="bg-card text-muted-foreground px-2">or continue with email</span>
               </div>
             </div>
 
-            <Activity mode={selectedTab === "signin" ? "visible" : "hidden"}>
+            {selectedTab === "signin" && (
               <SignInTab
                 openEmailVerificationTab={openEmailVerificationTab}
                 openForgotPassword={() => setSelectedTab("forgot-password")}
               />
-            </Activity>
-            <Activity mode={selectedTab === "signup" ? "visible" : "hidden"}>
+            )}
+            {selectedTab === "signup" && (
               <SignUpTab openEmailVerificationTab={openEmailVerificationTab} />
-            </Activity>
+            )}
           </CardContent>
         </Card>
       )}

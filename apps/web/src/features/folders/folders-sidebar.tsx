@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import type { Folder as FlatFolder } from "@quick-jot/db/schema/folders";
 
 import type { FolderNode } from "./folder-tree";
+import { NavUser } from "@/features/nav/nav-user";
 import { useTRPC } from "@/trpc";
 import { useNotesSearchParams } from "../notes/query-params";
 import { AddFolderDialog } from "./add-folder-dialog";
@@ -135,6 +136,11 @@ export function FoldersSidebar() {
             className="flex-1"
           />
         }
+      </div>
+
+      {/* User nav footer */}
+      <div className="border-t p-2">
+        <NavUser />
       </div>
     </div>
   );

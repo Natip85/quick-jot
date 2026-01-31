@@ -1,6 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
-import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
 import { folder } from "./folders";
@@ -23,6 +23,7 @@ export const note = pgTable("note", {
     .$defaultFn(() => createId()),
   title: text("title").notNull().default(""),
   content: jsonb("content").$type<JSONContent>(),
+  pinned: boolean("pinned").notNull().default(false),
   folderId: text("folder_id")
     .notNull()
     .references(() => folder.id, { onDelete: "cascade" }),

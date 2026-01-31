@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { skipToken, useQuery } from "@tanstack/react-query";
+import { Pin } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc";
@@ -36,7 +37,7 @@ export function NotesList() {
         <span className="text-sm font-medium">Notes ({notes?.length})</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-2">
         {!folderId ?
           <p className="text-muted-foreground mt-10 w-full p-3 text-center">
             Select a folder to view notes
@@ -49,11 +50,14 @@ export function NotesList() {
                 onClick={() => setNoteId(note.id)}
                 className={cn(
                   "rounded-md px-6 pt-3 transition-colors",
-                  noteId === note.id && "bg-accent"
+                  noteId === note.id && "bg-accent/70"
                 )}
               >
                 <div className="w-full border-b-[.5px] pb-2">
-                  <div className="truncate font-bold">{note.title}</div>
+                  <div className="flex items-center gap-1.5">
+                    {note.pinned && <Pin className="text-muted-foreground h-3.5 w-3.5 shrink-0" />}
+                    <span className="truncate font-bold">{note.title}</span>
+                  </div>
                   <div className="mt-1 text-sm">
                     {new Date(note.createdAt).toLocaleDateString()}
                   </div>

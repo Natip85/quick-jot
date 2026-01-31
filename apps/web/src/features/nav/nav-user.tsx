@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { History, LogOut, User } from "lucide-react";
+import { ChevronsUpDown, Loader2, LogOut } from "lucide-react";
 
 import { ModeToggle } from "@/components/mode-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -21,85 +20,88 @@ import { authClient } from "@/lib/auth-client";
 
 export function NavUser() {
   const router = useRouter();
+
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
-    return <Skeleton className="size-10 rounded-full" />;
+    return <Skeleton className="h-10 w-full rounded-md" />;
   }
 
   if (!session) {
     return (
       <Button
         size="sm"
+        className="w-full"
         asChild
       >
         <Link href="/auth/sign-in">Login</Link>
       </Button>
     );
   }
+  const initials = (session?.user?.name?.[0] ?? "") + (session?.user?.name?.[1] ?? "");
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
-        <Avatar className="size-8">
-          <AvatarImage
-            src={session.user.image ?? undefined}
-            alt={session.user.name ?? ""}
-          />
-          <AvatarFallback>{session.user.name?.slice(0, 2).toUpperCase() ?? "U"}</AvatarFallback>
-        </Avatar>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="h-auto w-full justify-start gap-3 px-2 py-2"
+        >
+          <Avatar className="size-8 rounded-full">
+            <AvatarImage
+              src={session?.user?.image ?? ""}
+              alt={session?.user?.name ?? ""}
+            />
+            <AvatarFallback className="bg-background rounded-full border-2">
+              {isPending ?
+                <Loader2 className="size-4 animate-spin" />
+              : initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-semibold">{session?.user?.name}</span>
+            <span className="text-muted-foreground truncate text-xs">{session?.user?.email}</span>
+          </div>
+          <ChevronsUpDown className="text-muted-foreground ml-auto size-4" />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-56 rounded-lg"
+        className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+        side="right"
         align="end"
-        sideOffset={8}
+        sideOffset={4}
       >
-        <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm">
+        <DropdownMenuLabel className="relative p-0 font-normal">
+          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar className="size-8">
               <AvatarImage
-                src={session.user.image ?? undefined}
-                alt={session.user.name ?? ""}
+                src={session?.user?.image ?? ""}
+                alt={session?.user?.name ?? ""}
               />
-              <AvatarFallback>{session.user.name?.slice(0, 2).toUpperCase() ?? "U"}</AvatarFallback>
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{session.user.name}</span>
-              <span className="text-muted-foreground truncate text-xs">{session.user.email}</span>
+              <span className="truncate font-semibold">{session?.user?.name}</span>
+              <span className="text-muted-foreground truncate text-xs">{session?.user?.email}</span>
             </div>
             <ModeToggle />
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link href="#">
-              <User />
-              Profile
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="#">
-              <History />
-              History
-            </Link>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+
         <DropdownMenuItem
-          variant="destructive"
-          onClick={() => {
+          onClick={() =>
             void authClient.signOut({
               fetchOptions: {
                 onSuccess: () => {
                   router.push("/");
                 },
               },
-            });
-          }}
+            })
+          }
         >
           <LogOut />
-          Logout
+          Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

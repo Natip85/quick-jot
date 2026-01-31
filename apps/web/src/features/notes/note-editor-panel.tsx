@@ -30,6 +30,7 @@ export function NoteEditorPanel() {
           key={noteId}
           content={note?.content?.content as JSONContent[]}
           toolbarLeadingContent={<AddNoteButton />}
+          isPinned={note?.pinned}
         >
           <div className="text-muted-foreground mb-8 text-center text-sm">
             {note?.updatedAt && (

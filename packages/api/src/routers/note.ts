@@ -73,7 +73,7 @@ export const noteRouter = createTRPCRouter({
     }),
 
   /**
-   * Get all notes in a folder (ordered by updatedAt desc)
+   * Get all notes in a folder (ordered by pinned desc, then updatedAt desc)
    */
   list: protectedProcedure.input(noteFilterSchema).query(async ({ ctx, input }) => {
     const userId = ctx.session.user.id;
@@ -98,7 +98,7 @@ export const noteRouter = createTRPCRouter({
 
     const notes = await ctx.db.query.note.findMany({
       where: and(...conditions),
-      orderBy: [desc(note.updatedAt)],
+      orderBy: [desc(note.pinned), desc(note.updatedAt)],
     });
 
     return notes;
@@ -232,5 +232,34 @@ export const noteRouter = createTRPCRouter({
       await ctx.db.delete(note).where(and(eq(note.id, input.id), eq(note.userId, userId)));
 
       return { success: true };
+    }),
+
+  /**
+   * Toggle a note's pinned status
+   */
+  togglePin: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Verify note exists and belongs to user
+      const existingNote = await ctx.db.query.note.findFirst({
+        where: and(eq(note.id, input.id), eq(note.userId, userId)),
+      });
+
+      if (!existingNote) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Note not found",
+        });
+      }
+
+      const [updatedNote] = await ctx.db
+        .update(note)
+        .set({ pinned: !existingNote.pinned })
+        .where(and(eq(note.id, input.id), eq(note.userId, userId)))
+        .returning();
+
+      return updatedNote;
     }),
 });
