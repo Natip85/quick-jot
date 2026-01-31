@@ -59,7 +59,7 @@ export function useSwipeBack({
       const deltaY = Math.abs(touch.clientY - touchStartY.current);
 
       // Check if it's a horizontal swipe (not too much vertical movement)
-      // and the swipe distance exceeds the threshold
+      // and the swipe distance exceeds the threshold.
       if (deltaX > threshold && deltaY < deltaX * 0.5) {
         onSwipeBack();
       }
