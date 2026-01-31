@@ -32,7 +32,6 @@
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
     "next": "catalog:",
-    "stripe": "^17.5.0",
     "superjson": "^2.2.2",
     "zod": "catalog:"
   },
