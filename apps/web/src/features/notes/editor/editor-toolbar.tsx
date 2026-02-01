@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Bold,
   Check,
+  Folder,
   FolderIcon,
   Highlighter,
   ImageIcon,
@@ -520,17 +521,20 @@ export function EditorToolbar({
           >
             {isPinned ?
               <>
-                <PinOff className="mr-2 h-4 w-4" />
+                <PinOff className="h-4 w-4" />
                 Unpin note
               </>
             : <>
-                <Pin className="mr-2 h-4 w-4" />
+                <Pin className="h-4 w-4" />
                 Pin note
               </>
             }
           </DropdownMenuItem>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Move to</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>
+              <Folder />
+              Move to
+            </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               {folders?.map((folder) => (
                 <DropdownMenuItem

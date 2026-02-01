@@ -23,6 +23,7 @@ export const note = pgTable("note", {
     .$defaultFn(() => createId()),
   title: text("title").notNull().default(""),
   content: jsonb("content").$type<JSONContent>(),
+  plainText: text("plain_text").notNull().default(""),
   pinned: boolean("pinned").notNull().default(false),
   folderId: text("folder_id")
     .notNull()

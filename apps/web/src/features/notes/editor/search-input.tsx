@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { useNotesSearchParams } from "../query-params";
@@ -9,12 +9,14 @@ export function SearchInput({ className }: { className?: string }) {
   const { q, debouncedSetSearchParams, clearQuery } = useNotesSearchParams();
 
   // Use local state for the input value to avoid losing focus on URL updates
-  const [localValue, setLocalValue] = useState(q);
+  // Initialize with q value, and reset when q changes via key prop pattern
+  const [localValue, setLocalValue] = useState(q ?? "");
 
-  // Sync local state when URL param changes externally (e.g., cleared from elsewhere)
-  useEffect(() => {
-    setLocalValue(q);
-  }, [q]);
+  // Reset local value when q is cleared externally (e.g., from another component)
+  // Using controlled input pattern where local state tracks the input
+  if (q === null && localValue !== "") {
+    setLocalValue("");
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -30,7 +32,7 @@ export function SearchInput({ className }: { className?: string }) {
   return (
     <Input
       type="text"
-      placeholder="Search notes..."
+      placeholder="Search all notes..."
       value={localValue}
       onChange={handleChange}
       onClear={handleClear}

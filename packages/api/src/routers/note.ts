@@ -1,10 +1,11 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, ilike } from "drizzle-orm";
+import { and, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 
 import type { JSONContent } from "@quick-jot/db/schema/notes";
 import { folder } from "@quick-jot/db/schema/folders";
 import { note } from "@quick-jot/db/schema/notes";
+import { extractPlainText } from "@quick-jot/db/utils/notes";
 
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 
@@ -64,6 +65,7 @@ export const noteRouter = createTRPCRouter({
         .values({
           title: input.title,
           content: input.content ?? null,
+          plainText: extractPlainText(input.content),
           folderId: input.folderId,
           userId,
         })
@@ -103,6 +105,29 @@ export const noteRouter = createTRPCRouter({
 
     return notes;
   }),
+
+  /**
+   * Global search across all notes (searches title and content)
+   */
+  globalSearch: protectedProcedure
+    .input(z.object({ q: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const searchPattern = `%${input.q}%`;
+
+      const notes = await ctx.db.query.note.findMany({
+        where: and(
+          eq(note.userId, userId),
+          or(ilike(note.title, searchPattern), ilike(note.plainText, searchPattern))
+        ),
+        with: {
+          folder: true,
+        },
+        orderBy: [desc(note.updatedAt)],
+      });
+
+      return notes;
+    }),
 
   /**
    * Get a single note by ID
@@ -152,7 +177,10 @@ export const noteRouter = createTRPCRouter({
 
       const updateData: Partial<typeof note.$inferInsert> = {};
       if (input.title !== undefined) updateData.title = input.title;
-      if (input.content !== undefined) updateData.content = input.content;
+      if (input.content !== undefined) {
+        updateData.content = input.content;
+        updateData.plainText = extractPlainText(input.content);
+      }
 
       const [updatedNote] = await ctx.db
         .update(note)

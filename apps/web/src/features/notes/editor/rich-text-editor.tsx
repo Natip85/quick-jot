@@ -1,7 +1,7 @@
 "use client";
 
 import type { JSONContent } from "@tiptap/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Color from "@tiptap/extension-color";
@@ -113,9 +113,12 @@ export const RichTextEditor = ({
     content: content?.length ? { type: "doc", content } : undefined,
   });
 
+  const hasInitializedContent = useRef(false);
+
   useEffect(() => {
-    if (editor && content?.length) {
+    if (editor && content?.length && !hasInitializedContent.current) {
       editor.commands.setContent({ type: "doc", content }, { emitUpdate: false });
+      hasInitializedContent.current = true;
     }
   }, [editor, content]);
 
@@ -183,9 +186,6 @@ export const RichTextEditor = ({
   );
 };
 
-/**
- * Extracts text from the first block of TipTap JSON content to use as the note title
- */
 function extractTitleFromContent(content: JSONContent): string {
   const firstBlock = content.content?.[0];
   if (!firstBlock) return "New note";
