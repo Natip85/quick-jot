@@ -171,7 +171,7 @@ function FolderItem({ folder, level }: FolderItemProps) {
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      "size-6 p-0 opacity-0 transition-opacity group-hover/folder:opacity-100",
+                      "size-6 p-0 transition-opacity md:opacity-0 md:group-hover/folder:opacity-100",
                       "hover:bg-sidebar-accent"
                     )}
                     onClick={(e) => e.stopPropagation()}
