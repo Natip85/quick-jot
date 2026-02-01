@@ -234,7 +234,7 @@ export function MobileToolbar({
             <SheetHeader>
               <SheetTitle>Formatting</SheetTitle>
             </SheetHeader>
-            <div className="mt-4 space-y-4">
+            <div className="space-y-4 overflow-y-auto px-4 pt-2 pb-4">
               {/* Text Styles */}
               <div>
                 <h4 className="text-muted-foreground mb-2 text-sm font-medium">Text Style</h4>
