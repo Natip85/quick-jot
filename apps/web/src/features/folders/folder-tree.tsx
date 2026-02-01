@@ -74,6 +74,8 @@ function FolderItem({ folder, level }: FolderItemProps) {
   } = useFolderTree();
   const [editName, setEditName] = React.useState(folder.name);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  // Track when a menu action was performed to prevent ghost clicks on mobile
+  const menuActionTimeRef = React.useRef<number>(0);
 
   const isSelected = selectedId === folder.id;
   const isEditing = editingId === folder.id;
@@ -110,8 +112,30 @@ function FolderItem({ folder, level }: FolderItemProps) {
   };
 
   const handleAddSubfolder = () => {
+    // Record timestamp to prevent ghost clicks on mobile
+    menuActionTimeRef.current = Date.now();
     setIsOpen(true);
     onAddFolder(folder.id);
+  };
+
+  const handleStartRename = () => {
+    // Record timestamp to prevent ghost clicks on mobile
+    menuActionTimeRef.current = Date.now();
+    setEditingId(folder.id);
+  };
+
+  const handleDeleteFolder = () => {
+    // Record timestamp to prevent ghost clicks on mobile
+    menuActionTimeRef.current = Date.now();
+    onDeleteFolder(folder.id);
+  };
+
+  const handleFolderClick = () => {
+    // Ignore clicks that happen within 500ms of a menu action (ghost clicks on mobile)
+    if (Date.now() - menuActionTimeRef.current < 500) {
+      return;
+    }
+    setSelectedId(folder.id);
   };
 
   const FolderContent = (
@@ -120,7 +144,11 @@ function FolderItem({ folder, level }: FolderItemProps) {
       onOpenChange={setIsOpen}
     >
       <div className="group/folder relative">
-        <ContextMenu>
+        <ContextMenu
+          onOpenChange={() => {
+            menuActionTimeRef.current = Date.now();
+          }}
+        >
           <ContextMenuTrigger asChild>
             <div
               className={cn(
@@ -129,7 +157,7 @@ function FolderItem({ folder, level }: FolderItemProps) {
                 isSelected && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
               style={{ paddingLeft: `${level * 12 + 8}px` }}
-              onClick={() => setSelectedId(folder.id)}
+              onClick={handleFolderClick}
             >
               <CollapsibleTrigger
                 asChild
@@ -165,7 +193,11 @@ function FolderItem({ folder, level }: FolderItemProps) {
                 />
               : <span className="flex-1 truncate">{folder.name}</span>}
 
-              <DropdownMenu>
+              <DropdownMenu
+                onOpenChange={() => {
+                  menuActionTimeRef.current = Date.now();
+                }}
+              >
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
@@ -175,6 +207,7 @@ function FolderItem({ folder, level }: FolderItemProps) {
                       "hover:bg-sidebar-accent"
                     )}
                     onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
                   >
                     <MoreHorizontal className="size-4" />
                     <span className="sr-only">More options</span>
@@ -185,12 +218,12 @@ function FolderItem({ folder, level }: FolderItemProps) {
                   className="w-48"
                 >
                   {!isDefault && (
-                    <DropdownMenuItem onClick={handleAddSubfolder}>
+                    <DropdownMenuItem onSelect={handleAddSubfolder}>
                       <FolderPlus className="mr-2 size-4" />
                       New Subfolder
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => setEditingId(folder.id)}>
+                  <DropdownMenuItem onSelect={handleStartRename}>
                     <Pencil className="mr-2 size-4" />
                     Rename
                   </DropdownMenuItem>
@@ -199,7 +232,7 @@ function FolderItem({ folder, level }: FolderItemProps) {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         variant="destructive"
-                        onClick={() => onDeleteFolder(folder.id)}
+                        onSelect={handleDeleteFolder}
                       >
                         <Trash2 className="mr-2 size-4" />
                         Delete
@@ -212,12 +245,12 @@ function FolderItem({ folder, level }: FolderItemProps) {
           </ContextMenuTrigger>
           <ContextMenuContent className="w-48">
             {!isDefault && (
-              <ContextMenuItem onClick={handleAddSubfolder}>
+              <ContextMenuItem onSelect={handleAddSubfolder}>
                 <FolderPlus className="mr-2 size-4" />
                 New Subfolder
               </ContextMenuItem>
             )}
-            <ContextMenuItem onClick={() => setEditingId(folder.id)}>
+            <ContextMenuItem onSelect={handleStartRename}>
               <Pencil className="mr-2 size-4" />
               Rename
             </ContextMenuItem>
@@ -226,7 +259,7 @@ function FolderItem({ folder, level }: FolderItemProps) {
                 <ContextMenuSeparator />
                 <ContextMenuItem
                   variant="destructive"
-                  onClick={() => onDeleteFolder(folder.id)}
+                  onSelect={handleDeleteFolder}
                 >
                   <Trash2 className="mr-2 size-4" />
                   Delete

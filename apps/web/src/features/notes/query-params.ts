@@ -20,8 +20,8 @@ export const useNotesSearchParams = ({ debounceMs = 500 }: { debounceMs?: number
   );
 
   const setFolderId = (folderId: string | null) => {
-    // When changing folder, clear the selected note
-    void setSearchParams({ folderId, noteId: null });
+    // When changing folder, clear the selected note and any active search query
+    void setSearchParams({ folderId, noteId: null, q: null });
   };
 
   const setNoteId = (noteId: string | null) => {

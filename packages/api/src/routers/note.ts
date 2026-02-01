@@ -115,16 +115,32 @@ export const noteRouter = createTRPCRouter({
       const userId = ctx.session.user.id;
       const searchPattern = `%${input.q}%`;
 
-      const notes = await ctx.db.query.note.findMany({
-        where: and(
-          eq(note.userId, userId),
-          or(ilike(note.title, searchPattern), ilike(note.plainText, searchPattern))
-        ),
-        with: {
-          folder: true,
-        },
-        orderBy: [desc(note.updatedAt)],
-      });
+      // Use SQL-like builder for more reliable OR condition handling
+      const notes = await ctx.db
+        .select({
+          id: note.id,
+          title: note.title,
+          content: note.content,
+          plainText: note.plainText,
+          pinned: note.pinned,
+          folderId: note.folderId,
+          userId: note.userId,
+          createdAt: note.createdAt,
+          updatedAt: note.updatedAt,
+          folder: {
+            id: folder.id,
+            name: folder.name,
+          },
+        })
+        .from(note)
+        .leftJoin(folder, eq(note.folderId, folder.id))
+        .where(
+          and(
+            eq(note.userId, userId),
+            or(ilike(note.title, searchPattern), ilike(note.plainText, searchPattern))
+          )
+        )
+        .orderBy(desc(note.updatedAt));
 
       return notes;
     }),

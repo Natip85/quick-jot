@@ -1,7 +1,7 @@
 "use client";
 
 import type { JSONContent } from "@tiptap/react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
@@ -135,9 +135,17 @@ export function MobileNoteEditor() {
     content: content?.length ? { type: "doc", content } : undefined,
   });
 
+  const hasInitializedContent = useRef(false);
+
+  // Reset the initialized flag when switching to a different note
   useEffect(() => {
-    if (editor && content?.length) {
+    hasInitializedContent.current = false;
+  }, [noteId]);
+
+  useEffect(() => {
+    if (editor && content?.length && !hasInitializedContent.current) {
       editor.commands.setContent({ type: "doc", content }, { emitUpdate: false });
+      hasInitializedContent.current = true;
     }
   }, [editor, content]);
 
